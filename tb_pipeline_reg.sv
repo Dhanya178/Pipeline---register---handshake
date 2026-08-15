@@ -6,22 +6,22 @@ module tb_pipeline_reg;
     
     logic                  clk;
     logic                  rst_n;
-    logic                  s_valid;
-    logic                  s_ready;
-    logic [DATA_WIDTH-1:0] s_data;
-    logic                  m_valid;
-    logic                  m_ready;
-    logic [DATA_WIDTH-1:0] m_data;
+    logic                  in_valid;
+    logic                  in_ready;
+    logic [DATA_WIDTH-1:0] in_data;
+    logic                  out_valid;
+    logic                  out_ready;
+    logic [DATA_WIDTH-1:0] out_data;
 
     pipeline_reg #(.DATA_WIDTH(DATA_WIDTH)) dut (
         .clk(clk),
         .rst_n(rst_n),
-        .s_valid(s_valid),
-        .s_ready(s_ready),
-        .s_data(s_data),
-        .m_valid(m_valid),
-        .m_ready(m_ready),
-        .m_data(m_data)
+        .in_valid(in_valid),
+        .in_ready(in_ready),
+        .in_data(in_data),
+        .out_valid(out_valid),
+        .out_ready(out_ready),
+        .out_data(out_data)
     );
 
     // Clock generation
@@ -35,9 +35,9 @@ module tb_pipeline_reg;
     initial begin
         // Initialize
         rst_n   = 0;
-        s_valid = 0;
-        s_data  = 0;
-        m_ready = 0;
+        in_valid = 0;
+        in_data  = 0;
+        out_ready = 0;
         
         // Reset
         repeat(2) @(posedge clk);
@@ -45,31 +45,31 @@ module tb_pipeline_reg;
         
         // Test 1: Normal transfer
         @(posedge clk);
-        s_valid = 1;
-        s_data  = 8'hAB;
-        m_ready = 1;
+        in_valid = 1;
+        in_data  = 8'hAB;
+        out_ready = 1;
         @(posedge clk);
-        s_valid = 0;
+        in_valid = 0;
         
         // Test 2: Backpressure
         @(posedge clk);
-        s_valid = 1;
-        s_data  = 8'hCD;
-        m_ready = 0;
+        in_valid = 1;
+        in_data  = 8'hCD;
+        out_ready = 0;
         repeat(2) @(posedge clk);
-        m_ready = 1;
+        out_ready = 1;
         @(posedge clk);
-        s_valid = 0;
+        in_valid = 0;
         
         // Test 3: Multiple transfers
         repeat(3) begin
             @(posedge clk);
-            s_valid = 1;
-            s_data  = $random;
-            m_ready = 1;
+            in_valid = 1;
+            in_data  = $random;
+            out_ready = 1;
         end
         @(posedge clk);
-        s_valid = 0;
+        in_valid = 0;
         
         repeat(2) @(posedge clk);
         $display("Simulation complete");
@@ -78,8 +78,8 @@ module tb_pipeline_reg;
 
     // Monitor
     initial begin
-        $monitor("Time=%0t | s_valid=%b s_ready=%b s_data=%h | m_valid=%b m_ready=%b m_data=%h",
-                  $time, s_valid, s_ready, s_data, m_valid, m_ready, m_data);
+        $monitor("Time=%0t | in_valid=%b in_ready=%b in_data=%h | out_valid=%b out_ready=%b out_data=%h",
+                  $time, in_valid, in_ready, in_data, out_valid, out_ready, out_data);
     end
 
 endmodule
